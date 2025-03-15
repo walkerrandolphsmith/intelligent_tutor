@@ -1,0 +1,22 @@
+operator {
+    
+}
+
+server : web server {
+
+}
+
+operator -> server : "1. starts web server"
+
+script : scripts/generate_openapi.py {
+
+}
+
+disk {
+
+}
+
+operator -> script : "2. executes script"
+script -> server : "3. requests /openapi.json"
+server -> script : "4. returns openapi.json"
+script -> disk : "5. writes openapi.json"

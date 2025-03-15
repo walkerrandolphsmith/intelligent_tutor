@@ -1,0 +1,16 @@
+user {
+    
+}
+
+server : web server {
+
+}
+
+data : Serialized model {
+
+}
+
+user -> server : "makes request"
+server -> user : "returns prediction"
+server -> data : "loads model from disk"
+data -> server : "server ready \nto respond to requests"

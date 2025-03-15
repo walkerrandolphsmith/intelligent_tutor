@@ -1,0 +1,15 @@
+operator {
+    
+}
+
+ipynb : ipynb kernel {
+
+}
+
+data : Serialized model {
+
+}
+
+ipynb -> data : "build model\nwrite to disk"
+
+operator -> ipynb : "runs notebook"

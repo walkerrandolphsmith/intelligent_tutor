@@ -1,0 +1,19 @@
+{
+    //https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: FastAPI",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "main:web_server",
+                "--reload",
+                "--port=5000"
+            ],
+            "jinja": true,
+            "autoStartBrowser": true
+        }
+    ]
+}
