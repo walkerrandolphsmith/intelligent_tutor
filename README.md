@@ -10,14 +10,11 @@
     - [Precise Inputs](#precise-inputs)
   - [Events](#events)
       - [LessonStarted](#lessonstarted)
-      - [LessonStopped](#lessonstopped)
+      - [LessonCompleted](#lessoncompleted)
       - [AnswerSubmitted](#answersubmitted)
-      - [LessonTooDifficultFeedbackSubmitted](#lessontoodifficultfeedbacksubmitted)
-    - [Projections](#projections)
       - [Experience](#experience)
-      - [Average Duration](#average-duration)
       - [Accuracy](#accuracy)
-      - [Repetition](#repetition)
+  - [Demo](#demo)
   - [Development Setup](#development-setup)
   - [Build the model](#build-the-model)
   - [Run Tests](#run-tests)
@@ -57,16 +54,12 @@ Fuzzy Expert System to predict lesson difficulty appropriate for a specific user
 `Lesson Difficulty` - easy, moderate, hard, impossible
 
 ### Input Fuzzy Sets
-* `Experience` - beginner, intermediate, expert
-* `Response time` - slow, medium, fast, immediate
-* `Accuracy` - bad, cointoss, good, perfect
-* `Repetition` - rote, understand, apply, correlate
+* `User Level` - beginner, intermediate, expert
+* `Accuracy` - low, medium, high
 
 ### Precise Inputs
 * Experience - number of lessons
-* Response time - average duration of lessons
 * Accuracy - correct answers versus total lessons
-* Repetition - count of explicit “too hard” feedback
 
 ## Events
 
@@ -81,7 +74,7 @@ Fuzzy Expert System to predict lesson difficulty appropriate for a specific user
 }
 ```
 
-#### LessonStopped
+#### LessonCompleted
 ```json
 {
   "event": "LessonStopped",
@@ -105,52 +98,14 @@ Fuzzy Expert System to predict lesson difficulty appropriate for a specific user
 }
 ```
 
-#### LessonTooDifficultFeedbackSubmitted
-```json
-{
-  "event": "LessonFeedbackSubmitted",
-  "timestamp": "2025-03-26T12:35:00Z",
-  "lesson_id": "abc123",
-  "student_id": "user456"
-}
-```
-
-### Projections
-
-Fuzzy input sets need to be derived from precise inputs. The precise inputs themselves can be derived from applying aggregations of the events. A **sliding window** can be used to bound the events considered by a time frame.
-
-> Example:
-> 
-> To determine if a user's response time is slow, medium, fast, immediate
->
-> you must first have a precise calculation of the average duration of their lessons
->
-> average duration of lessons can be computed by considering the average difference between matching lessonStart and lessonStop events withing a certain time fame, the sliding window.
-
 #### Experience
 Number of lessons completed in a time frame
 
-#### Average Duration
-
-Average amount of time spent on lessons
-
-* Option 1: Derive from event stream
-    1. Retrieve all LessonStarted and LessonStopped events where user is X and timestamp in sliding window
-    1. Pair each LessonStarted event with its corresponding LessonStopped event using the lesson_id
-    2. Compute duration
-       1. duration=timestamp of LessonStopped−timestamp of LessonStarted
-    3. Compute average duration
- 1. Option 2: LessonStop includes the duration
-    1. Retrieve all LessonStopped events where user is X and timestamp in sliding window
-    2. Read the duration
-    3. Compute the average duration
-
 #### Accuracy
 Number of correct answers versus total number of lessons within time frame
-Repetition - count of explicit “too hard” feedback
 
-#### Repetition
-Number of times explict feedback was provided that a lesson was too difficult
+## Demo
+![example screenshot](./docs/.attachments/screenshot_developer_experience.png)
 
 ## Development Setup
 ```

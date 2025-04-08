@@ -1,16 +1,26 @@
+from typing import Union
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import os
 import pickle
 from skfuzzy import control as ctrl
+import skfuzzy as fuzz
 
 def load_model():
     """
     Load the machine learning model from the disk
     """
     global model
+    global lesson_difficulty
+    global user_level
+    global accuracy
     with open("./data/model.pkl", "rb") as file:
-        model = pickle.load(file)
+        data = pickle.load(file)
+        model = data['model']
+        lesson_difficulty = data['lesson_difficulty']
+        user_level = data['user_level']
+        accuracy = data['accuracy']
     print("Model loaded successfully")
 
 @asynccontextmanager
@@ -62,21 +72,40 @@ def version() -> dict[str, str]:
 
 @web_server.get("/predict")
 def predict(
-    soil_level: float = Query(..., description="Soil level in parts per million"),
-    load_size: float = Query(..., description="Load size in kilograms"),
-    water_temperature: float = Query(..., description="Water temperature in degrees Celsius")
-) -> dict[str, str]:
+    user_level_parameter: str = Query(..., description="User level in terms of number of completed lessons"),
+    accuracy_parameter: str = Query(..., description="Accuracy in terms of percentage"),
+) -> dict:
     """
-    Predict the wash time based on the soil level, load size, and water temperature
-    Accepts soil_level, load_size, and water_temperature as query parameters
-    Returns the predicted wash time
+    Predict the lesson difficulty based on the user level and accuracy
+    Accepts user_level and accuracy as query parameters
+    Returns the predicted lesson difficulty
 
-    Example: curl "http://127.0.0.1:8000/predict?soil_level=200&load_size=10&water_temperature=50"
+    Example: curl "http://127.0.0.1:8000/predict?user_level=100&accuracy=90"
+           : curl "http://127.0.0.1:8000/predict?user_level_parameter=expert&accuracy=high"
+           : curl "http://127.0.0.1:8000/predict?user_level_parameter=expert&accuracy=50"
     """
+    user_level_value = float(user_level_parameter) if is_float(user_level_parameter) else user_level.terms[user_level_parameter]
+    accuracy_value = float(accuracy_parameter) if is_float(accuracy_parameter) else accuracy.terms[accuracy_parameter]
     simulation = ctrl.ControlSystemSimulation(model)
-    simulation.input['soil_level'] = soil_level
-    simulation.input['load_size'] = load_size
-    simulation.input['water_temperature'] = water_temperature
+    simulation.input['user_level'] = user_level_value
+    simulation.input['accuracy'] = accuracy_value
     simulation.compute()
-    output = simulation.output['wash_time']
-    return {"wash_time": str(output) }
+    output = simulation.output['lesson_difficulty']
+    easy_membership = fuzz.interp_membership(lesson_difficulty.universe, lesson_difficulty['easy'].mf, output)
+    moderate_membership = fuzz.interp_membership(lesson_difficulty.universe, lesson_difficulty['moderate'].mf, output)
+    hard_membership = fuzz.interp_membership(lesson_difficulty.universe, lesson_difficulty['hard'].mf, output)
+    return {
+        "lesson_difficulty": round(output, 2),
+        "fuzzy_membership_degrees": {
+            "easy": round(easy_membership, 2),
+            "moderate": round(moderate_membership, 2),
+            "hard": round(hard_membership, 2)
+        }
+    }
+
+def is_float(value: str) -> bool:
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
